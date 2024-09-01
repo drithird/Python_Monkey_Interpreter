@@ -34,10 +34,18 @@ class Lexer:
         if self.readPosition >= len(self.input):
             self.ch = 0
         else:
-            self.ch = self.input[self.readPosition]
+            self.ch = str(self.input[self.readPosition])
 
         self.position = self.readPosition
         self.readPosition += 1
+
+    def peekChar(self):
+        """This function is being used to view the next character in the case of repeating
+        symbols meaning different things. i.e. == vs = vs =!"""
+        if self.readPosition >= len(self.input):
+            return 0
+        else:
+            return self.input[self.readPosition]
 
     def newToken(self, tokenType: token.TokenType, ch: str):
         return Token(tokenType, str(ch))
@@ -49,7 +57,7 @@ class Lexer:
         variable name
         """
         position = self.position
-        while self.ch.isalpha():
+        while str(self.ch).isalpha():
             self.readChar()
         return self.input[position : self.position]
 
@@ -57,6 +65,8 @@ class Lexer:
         position = self.position
         while self.ch.isdigit():
             self.readChar()
+            if type(self.ch) is int:
+                break
         return self.input[position : self.position]
 
     def skipWhitespace(self):
@@ -70,8 +80,11 @@ class Lexer:
         self.skipWhitespace()
         match self.ch:
             case "=":
-                print(token.ASSIGN, self.ch)
-                tok = self.newToken(token.ASSIGN, self.ch)
+                if self.peekChar() == "=":
+                    self.readChar()
+                    tok = self.newToken(token.EQ, "==")
+                else:
+                    tok = self.newToken(token.ASSIGN, self.ch)
             case ";":
                 tok = self.newToken(token.SEMICOLON, self.ch)
             case "(":
@@ -82,6 +95,22 @@ class Lexer:
                 tok = self.newToken(token.COMMA, self.ch)
             case "+":
                 tok = self.newToken(token.PLUS, self.ch)
+            case "-":
+                tok = self.newToken(token.MINUS, self.ch)
+            case "!":
+                if self.peekChar() == "=":
+                    self.readChar()
+                    tok = self.newToken(token.NOT_EQ, "!=")
+                else:
+                    tok = self.newToken(token.BANG, self.ch)
+            case "*":
+                tok = self.newToken(token.ASTERISK, self.ch)
+            case "/":
+                tok = self.newToken(token.SLASH, self.ch)
+            case "<":
+                tok = self.newToken(token.LT, self.ch)
+            case ">":
+                tok = self.newToken(token.GT, self.ch)
             case "{":
                 tok = self.newToken(token.LBRACE, self.ch)
             case "}":

@@ -21,9 +21,9 @@ class Expression(Node):
 
 
 class Identifier(Node):
-    def __init__(self):
-        self.Token: token.Token
-        self.Value: str
+    def __init__(self, tok, value):
+        self.Token: token.Token = tok
+        self.Value: str = value
 
     def expression_node():
         pass
@@ -33,21 +33,24 @@ class Identifier(Node):
 
 
 class Program(Node):
-    def __init__(self, statements: [Statement]):
-        self.statements = statements
+    def __init__(self):
+        self.statements = None
 
-        def token_literal(self):
-            if len(self.statements) > 0:
-                return self.statements[0].token_literal()
-            else:
-                return ""
+    def token_literal(self):
+        if len(self.statements) > 0:
+            return self.statements[0].token_literal()
+        else:
+            return ""
 
 
 class LetStatement(Statement):
-    def __init__(self):
-        self.Token: token.Token
-        self.Name: Identifier
-        self.Value: Expression
+    def __init__(
+        self,
+        tok,
+    ):
+        self.token: token.Token
+        self.name: Identifier
+        self.value: Expression
 
     def statement_node(self):
         pass
