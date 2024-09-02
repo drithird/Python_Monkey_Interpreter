@@ -5,6 +5,35 @@ from monk_int.ast.ast import LetStatement
 import pytest
 
 
+def test_parser_errors():
+    input = """
+        let  = 5;
+        let  = ;
+        let foobar 838383;
+    """
+    tests = [
+        "expected next token to be IDENT, got = instead",
+        "expected next token to be IDENT, got = instead",
+        "expected next token to be =, got INT instead",
+    ]
+    lex = lexer.New(input)
+    parse: parser.Parser = parser.Parser(lex)
+    parse.parse_program()
+    errors = parse.Errors()
+    for index, error in enumerate(errors):
+        assert error == tests[index]
+
+
+def check_parser_errors(parse: parser.Parser):
+    errors = parse.Errors()
+    if len(errors) == 0:
+        return
+    print(f"parser has {len(errors)} errors")
+    for error in errors:
+        print(error)
+    assert False
+
+
 @pytest.mark.timeout(3)
 def test_let_statements():
     input = """
@@ -22,6 +51,7 @@ def test_let_statements():
     parse: parser.Parser = parser.Parser(lex)
 
     program = parse.parse_program()
+    check_parser_errors(parse)
     assert program is not None, "ParseProgram() returned none"
     assert (
         len(program.statements) == 3
@@ -51,3 +81,25 @@ def help_test_let_statement(statement: LetStatement, expected_identifier: str):
     ), f"letStmt.name.token_literal() not '{expected_identifier}'. got={let_stmt.name.token_literal()}"
 
     return True
+
+
+def test_return_statements():
+    input = """
+    return 5;
+    return 10;
+    return 993322;
+    """
+
+    lex = lexer.New(input)
+    parse: parser.Parser = parser.Parser(lex)
+    program = parse.parse_program()
+    check_parser_errors(parse)
+
+    assert len(program.statements) == 3
+    for stmt in program.statements:
+        assert isinstance(
+            stmt, ast.ReturnStatement
+        ), f"improper statement type returned type '{type(stmt)}'"
+        assert (
+            stmt.token_literal() == "return"
+        ), f"return statement did not return the token literal 'return' it returned '{stmt.token_literal()}' instead"

@@ -4,7 +4,10 @@ import monk_int.token.token as token
 
 class Node(ABC):
     @abstractmethod
-    def token_literal(self):
+    def token_literal(self) -> str:
+        pass
+
+    def __str__(self) -> str:
         pass
 
 
@@ -22,14 +25,14 @@ class Expression(Node):
 
 class Identifier(Node):
     def __init__(self, tok, value):
-        self.Token: token.Token = tok
-        self.Value: str = value
+        self.token: token.Token = tok
+        self.value: str = value
 
     def expression_node():
         pass
 
     def token_literal(self) -> str:
-        return self.Token.Literal
+        return self.token.Literal
 
 
 class Program(Node):
@@ -42,13 +45,19 @@ class Program(Node):
         else:
             return ""
 
+    def __str__(self):
+        out = []
+        for s in self.statements:
+            out.append(str(s))  # Assuming each statement has a __str__ method
+        return "".join(out)
+
 
 class LetStatement(Statement):
     def __init__(
         self,
         tok,
     ):
-        self.token: token.Token
+        self.token: token.Token = tok
         self.name: Identifier
         self.value: Expression
 
@@ -56,4 +65,47 @@ class LetStatement(Statement):
         pass
 
     def token_literal(self):
-        return self.Token.Literal
+        return self.token.Literal
+
+    def __str__(self):
+        out = []
+        out.append(self.token_literal() + " ")
+        out.append(str(self.name))
+        out.append("=")
+        if self.value is not None:
+            out.append(str(self.value))
+
+        out.append(";")
+        return "".join(out)
+
+
+class ReturnStatement(Statement):
+    def __init__(self, tok):
+        self.token: token.Token = tok
+        self.return_value: Expression
+
+    def statement_node(self):
+        pass
+
+    def token_literal(self):
+        return self.token.Literal
+
+    def __str__(self):
+        out = []
+        out.append(self.token_literal() + " ")
+        if self.return_value is not None:
+            out.append(str(self.return_value))
+        out.append(";")
+        return "".join(out)
+
+
+class ExpressionStatement(Statement):
+    def __init__(self, tok):
+        self.token: token.Token
+        self.expression: Expression
+
+    def statement_node(self):
+        pass
+
+    def token_literal(self):
+        return self.token.Literal
