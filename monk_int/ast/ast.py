@@ -34,6 +34,9 @@ class Identifier(Node):
     def token_literal(self) -> str:
         return self.token.Literal
 
+    def __str__(self):
+        return str(self.value)
+
 
 class Program(Node):
     def __init__(self):
@@ -70,10 +73,10 @@ class LetStatement(Statement):
     def __str__(self):
         out = []
         out.append(self.token_literal() + " ")
-        out.append(str(self.name))
-        out.append("=")
+        out.append(str(self.name.token_literal()))
+        out.append(" = ")
         if self.value is not None:
-            out.append(str(self.value))
+            out.append(str(self.value.token_literal()))
 
         out.append(";")
         return "".join(out)
@@ -109,3 +112,7 @@ class ExpressionStatement(Statement):
 
     def token_literal(self):
         return self.token.Literal
+
+    def __str__(self):
+        if self.expression.__str__() is not None:
+            return self.expression.__str__()

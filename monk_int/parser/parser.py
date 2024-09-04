@@ -1,6 +1,18 @@
 import monk_int.ast.ast as ast
 import monk_int.lexer.lexer as lexer
 import monk_int.token.token as token
+from typing import Callable, Dict
+
+prefix_parse = Callable[[], ast.Expression]
+infix_parse = Callable[[ast.Expression], ast.Expression]
+
+LOWEST = 1
+EQUALS = 2
+LESSGREATER = 3
+SUM = 4
+PRODUCT = 5
+PREFIX = 6
+CALL = 7
 
 
 class Parser:
@@ -18,8 +30,18 @@ class Parser:
         self.cur_token = None
         self.peek_token = None
         self.errors: [str] = []
+        self.prefix_parse_fn: Dict[token.TokenType, prefix_parse] = {}
+        self.infix_parse_fn: Dict[token.TokenType, infix_parse] = {}
+        self.register_prefix(token.IDENT, self.parse_identifier)
         self.next_token()
         self.next_token()
+
+    def register_prefix(self, token_type: token.TokenType, fn: prefix_parse):
+        self.prefix_parse_fn[token_type] = fn
+        print(self.prefix_parse_fn.keys())
+
+    def register_infix(self, token_type: token.TokenType, fn: infix_parse):
+        self.infix_parse_fn[token_type] = fn
 
     def Errors(self) -> [str]:
         return self.errors
@@ -49,6 +71,9 @@ class Parser:
         self.cur_token = self.peek_token
         self.peek_token = self.lex.NextToken()
 
+    def parse_identifier(self) -> ast.Expression:
+        return ast.Identifier(self.cur_token, self.cur_token.Literal)
+
     def parse_let_statement(self) -> ast.LetStatement:
         statement: ast.LetStatement = ast.LetStatement(tok=self.cur_token)
         if not self.expect_peek(token.IDENT):
@@ -71,6 +96,20 @@ class Parser:
 
         return statement
 
+    def parse_expression(self, precedence: int) -> ast.Expression:
+        prefix = self.prefix_parse_fn.get(self.cur_token.Type)
+        if prefix is None:
+            return None
+        left_expression = prefix()
+        return left_expression
+
+    def parse_expression_statement(self) -> ast.ExpressionStatement:
+        statement = ast.ExpressionStatement(self.cur_token)
+        statement.expression = self.parse_expression(LOWEST)
+        if self.peek_token_is(token.SEMICOLON):
+            self.next_token()
+        return statement
+
     def parse_statement(self) -> ast.LetStatement:
         match self.cur_token.Type:
             case token.LET:
@@ -78,7 +117,7 @@ class Parser:
             case token.RETURN:
                 return self.parse_return_statement()
             case _:
-                return None
+                return self.parse_expression_statement()
 
     def parse_program(self) -> ast.Program:
         program = ast.Program()

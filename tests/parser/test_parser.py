@@ -103,3 +103,28 @@ def test_return_statements():
         assert (
             stmt.token_literal() == "return"
         ), f"return statement did not return the token literal 'return' it returned '{stmt.token_literal()}' instead"
+
+
+def test_identifier_expression():
+    input = "foobar;"
+    lex = lexer.New(input)
+    parse = parser.Parser(lex)
+    program = parse.parse_program()
+    check_parser_errors(parse)
+    assert (
+        len(program.statements) == 1
+    ), f"Program has an imprproper amount of spaces it should be 1 returned {len(program.statements)} "
+    statement = program.statements[0]
+    assert isinstance(
+        statement, ast.ExpressionStatement
+    ), f"Statment did not return proper ExpressionStatement returned {type(statement)} instead"
+    ident = statement.expression
+    assert isinstance(
+        ident, ast.Identifier
+    ), f"Statment did not return proper Identifier returned {type(statement)} instead"
+    assert (
+        ident.value == "foobar"
+    ), f"Identifier.value is not correct should have returned foobar returned {ident.value}"
+    assert (
+        ident.token_literal() == "foobar"
+    ), f"Identifier.token_literal is not correct should have returned foobar returned {ident.token_literal()}"
